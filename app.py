@@ -7,12 +7,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# API Key
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 if not API_KEY:
     API_KEY = st.secrets.get("OPENROUTER_API_KEY", "")
 
-# Page config
 st.set_page_config(
     page_title="Free AI",
     page_icon="🤖",
@@ -20,7 +18,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Custom CSS
 st.markdown("""
 <style>
 .stApp, html, body, [data-testid="stAppViewContainer"] { background: #07080D !important; }
@@ -39,11 +36,11 @@ st.markdown("""
     background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.18);
     display: flex; align-items: center; justify-content: center; font-size: 14px;
 }
-.title { font-size: 15px; font-weight: 600; color: #D0D4E0; }
+.app-title { font-size: 15px; font-weight: 600; color: #D0D4E0; }
 .status {
     font-size: 9px; font-weight: 600; color: #38A169;
     background: rgba(56,161,105,0.08); border: 1px solid rgba(56,161,105,0.18);
-    border-radius: 20px; padding: 2px 8px;
+    border-radius: 20px; padding: 2px 8px; letter-spacing: 0.8px; text-transform: uppercase;
 }
 
 .chat-row { display: flex; width: 100%; margin-bottom: 1.5rem; gap: 10px; align-items: flex-start; }
@@ -53,123 +50,206 @@ st.markdown("""
     width: 26px; height: 26px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0; font-size: 11px; font-weight: 600; margin-top: 3px;
+    background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.2); color: #818CF8;
 }
-.avatar-ai { background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.2); color: #818CF8; }
 
-.bubble { max-width: 80%; font-size: 14.5px; line-height: 1.75; word-wrap: break-word; }
+.bubble { max-width: 80%; font-size: 14.5px; line-height: 1.75; word-wrap: break-word; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 .user-bubble { background: #111420; border: 1px solid rgba(255,255,255,0.055); color: #BFC6D6; border-radius: 16px 16px 3px 16px; padding: 0.65rem 1rem; }
-.ai-bubble { background: transparent; color: #8A95A3; padding: 0.1rem 0; }
-.ai-bubble p { margin: 0 0 0.5rem; color: #8A95A3; }
-.ai-bubble strong { color: #C0C8D8; font-weight: 600; }
-.ai-bubble em { color: #6E7D8C; }
-.ai-bubble ul, .ai-bubble ol { margin: 0.35rem 0 0.35rem 1.15rem; padding: 0; }
-.ai-bubble li { margin-bottom: 4px; color: #8A95A3; }
-.ai-bubble code { background: #0D0F18; border: 1px solid rgba(255,255,255,0.07); padding: 2px 6px; border-radius: 5px; font-size: 12.5px; color: #7EB8D4; }
-.ai-bubble pre { background: #0A0C14; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 0.9rem 1.1rem; overflow-x: auto; margin: 0.75rem 0; }
-.ai-bubble pre code { background: none; border: none; padding: 0; color: #9BAFC0; }
 
-.chat-img { max-width: 280px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); margin-top: 6px; }
+.chat-img { max-width: 280px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); margin-top: 6px; display: block; }
 
-.input-container {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: linear-gradient(to top, #07080D 80%, transparent);
-    padding: 1.5rem 0 1rem; z-index: 99;
+.img-preview-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 8px; padding: 4px 10px; font-size: 12px; color: #818CF8; margin-bottom: 6px;
 }
-.input-box {
-    max-width: 720px; margin: 0 auto;
-    display: flex; align-items: flex-end; gap: 8px;
-}
+.img-preview-pill img { width: 24px; height: 24px; border-radius: 4px; object-fit: cover; }
 
-[data-testid="stChatInput"] { display: none !important; }
-[data-testid="stFileUploader"] { display: none !important; }
+/* Chat input styling */
+.stChatInputContainer {
+    background: #0C0E17 !important; border: 1px solid rgba(255,255,255,0.07) !important;
+    border-radius: 16px !important; transition: border-color 0.2s !important;
+}
+.stChatInputContainer:focus-within { border-color: rgba(99,102,241,0.2) !important; }
+.stChatInputContainer textarea { color: #C8CEDB !important; font-size: 14px !important; background: transparent !important; }
+
+/* File uploader — show only the browse button, hide the rest */
+[data-testid="stFileUploaderDropzone"] {
+    background: transparent !important; border: none !important; padding: 0 !important;
+}
+[data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
+section[data-testid="stFileUploader"] > label { display: none !important; }
 
 div[data-testid="stButton"] > button {
     background: transparent !important; border: 1px solid rgba(255,255,255,0.05) !important;
     color: #4A5568 !important; font-size: 11px !important; border-radius: 8px !important;
-    padding: 3px 12px !important;
+    padding: 3px 12px !important; transition: all 0.15s !important;
 }
 div[data-testid="stButton"] > button:hover { border-color: rgba(255,255,255,0.09) !important; color: #A0AEC0 !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# Check API key
+# ── Guard ─────────────────────────────────────────────────────────────────────
 if not API_KEY:
-    st.error("API key not found. Please set OPENROUTER_API_KEY in secrets.")
+    st.error("🔑 API key not found. Set OPENROUTER_API_KEY in secrets.")
     st.stop()
 
-# System prompt
-SYSTEM_PROMPT = """You are a helpful AI assistant. Be concise and clear. Use markdown formatting."""
+# ── Constants ─────────────────────────────────────────────────────────────────
+TEXT_MODEL   = "openrouter/owl-alpha"
+VISION_MODEL = "google/gemini-2.0-flash-exp:free"
 
-# Session state
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+SYSTEM_PROMPT = (
+    "You are a helpful AI assistant. Be concise and clear. "
+    "Use markdown formatting for structure."
+)
 
-# Header
+# ── Session state ─────────────────────────────────────────────────────────────
+if "messages"      not in st.session_state: st.session_state.messages      = []
+if "pending_image" not in st.session_state: st.session_state.pending_image = None
+if "img_history"   not in st.session_state: st.session_state.img_history   = {}
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+def encode_image(file_bytes: bytes) -> str:
+    return base64.b64encode(file_bytes).decode("utf-8")
+
+def build_api_messages(history: list) -> list:
+    """Convert session messages to OpenRouter API format."""
+    out = [{"role": "system", "content": SYSTEM_PROMPT}]
+    for m in history:
+        out.append(m)
+    return out
+
+def render_user_bubble(text: str, image_data: dict = None):
+    safe = (text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+    safe = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', safe)
+    safe = re.sub(r'\*(.+?)\*',     r'<em>\1</em>',         safe)
+    safe = re.sub(r'`(.+?)`',       r'<code>\1</code>',     safe)
+    safe = safe.replace("\n", "<br>")
+    img_html = ""
+    if image_data:
+        img_html = f'<img src="data:{image_data["mime"]};base64,{image_data["data"]}" class="chat-img">'
+    st.markdown(
+        f'<div class="chat-row user-row"><div class="bubble user-bubble">{safe}{img_html}</div></div>',
+        unsafe_allow_html=True,
+    )
+
+def render_ai_bubble(text: str):
+    col1, col2 = st.columns([0.04, 0.96])
+    with col1:
+        st.markdown('<div class="avatar">✦</div>', unsafe_allow_html=True)
+    with col2:
+        # Use st.markdown (safe renderer, handles code blocks, tables etc.)
+        st.markdown(text)
+
+def call_api(messages: list, has_image: bool) -> str:
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=API_KEY,
+        default_headers={"HTTP-Referer": "https://free-ai.app", "X-Title": "Free AI"},
+    )
+    model = VISION_MODEL if has_image else TEXT_MODEL
+    response = client.chat.completions.create(model=model, messages=messages)
+    return response.choices[0].message.content
+
+# ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="header">
     <div class="brand">
         <div class="logo">🤖</div>
-        <div class="title">Free AI</div>
+        <div class="app-title">Free AI</div>
     </div>
     <div class="status">Online</div>
 </div>
 """, unsafe_allow_html=True)
 
-# Display messages
+# ── Chat history ──────────────────────────────────────────────────────────────
+if st.session_state.messages:
+    col1, col2, col3 = st.columns([4, 2, 4])
+    with col2:
+        if st.button("✕  Clear", key="clear_chat"):
+            st.session_state.messages      = []
+            st.session_state.pending_image = None
+            st.session_state.img_history   = {}
+            st.rerun()
+
 for msg in st.session_state.messages:
     if msg["role"] == "user":
-        text = msg["content"]
-        safe_text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        safe_text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', safe_text)
-        safe_text = safe_text.replace("\n", "<br>")
-        st.markdown(f'<div class="chat-row user-row"><div class="bubble user-bubble">{safe_text}</div></div>', unsafe_allow_html=True)
+        # Extract text from content (may be str or list for vision messages)
+        if isinstance(msg["content"], list):
+            text = next((i["text"] for i in msg["content"] if i.get("type") == "text"), "")
+        else:
+            text = msg["content"]
+        render_user_bubble(text, image_data=st.session_state.img_history.get(id(msg)))
+    elif msg["role"] == "assistant":
+        render_ai_bubble(msg["content"])
+
+# ── Image preview ─────────────────────────────────────────────────────────────
+if st.session_state.pending_image:
+    p = st.session_state.pending_image
+    c1, c2 = st.columns([9, 1])
+    with c1:
+        st.markdown(
+            f'<div class="img-preview-pill">'
+            f'<img src="data:{p["mime"]};base64,{p["data"]}">'
+            f'<span>🖼️ {p["name"]}</span></div>',
+            unsafe_allow_html=True,
+        )
+    with c2:
+        if st.button("✕", key="remove_img"):
+            st.session_state.pending_image = None
+            st.rerun()
+
+# ── File uploader ─────────────────────────────────────────────────────────────
+uploaded = st.file_uploader(
+    "📎 Attach image",
+    type=["png", "jpg", "jpeg", "webp"],
+    key="img_uploader",
+    label_visibility="visible",
+)
+if uploaded is not None:
+    current = st.session_state.pending_image
+    if current is None or current.get("name") != uploaded.name:
+        st.session_state.pending_image = {
+            "data": encode_image(uploaded.getvalue()),
+            "mime": uploaded.type,
+            "name": uploaded.name,
+        }
+        st.rerun()
+
+# ── Chat input ────────────────────────────────────────────────────────────────
+has_image = st.session_state.pending_image is not None
+hint = "Ask about this image…" if has_image else "Message Free AI…"
+
+if user_input := st.chat_input(hint):
+    pending = st.session_state.pending_image  # capture before clearing
+
+    # Build the message
+    if pending:
+        user_msg = {
+            "role": "user",
+            "content": [
+                {"type": "text",      "text": user_input},
+                {"type": "image_url", "image_url": {"url": f"data:{pending['mime']};base64,{pending['data']}"}},
+            ],
+        }
     else:
-        col1, col2 = st.columns([0.04, 0.96])
-        with col1:
-            st.markdown('<div class="avatar avatar-ai"></div>', unsafe_allow_html=True)
-        with col2:
-            st.markdown(f'<div class="bubble ai-bubble">{msg["content"]}</div>', unsafe_allow_html=True)
+        user_msg = {"role": "user", "content": user_input}
 
-# Spacer
-st.markdown('<div style="height: 120px;"></div>', unsafe_allow_html=True)
+    st.session_state.messages.append(user_msg)
+    if pending:
+        st.session_state.img_history[id(user_msg)] = pending
+    st.session_state.pending_image = None
 
-# Input area
-st.markdown('<div class="input-container">', unsafe_allow_html=True)
+    # Render immediately
+    render_user_bubble(user_input, image_data=pending)
 
-col1, col2, col3 = st.columns([0.06, 0.86, 0.08])
-
-with col1:
-    uploaded = st.file_uploader("Upload", type=["png", "jpg", "jpeg"], key="img_upload", label_visibility="collapsed")
-
-with col2:
-    user_input = st.text_input("Type a message...", key="user_input", label_visibility="collapsed")
-
-with col3:
-    send = st.button("Send", key="send_btn")
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Process input
-if send and user_input.strip():
-    st.session_state.messages.append({"role": "user", "content": user_input.strip()})
-
+    # Call API
     try:
-        client = OpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=API_KEY
-        )
-
-        messages_with_system = [{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.messages
-
-        response = client.chat.completions.create(
-            model="openrouter/auto",
-            messages=messages_with_system
-        )
-
-        ai_response = response.choices[0].message.content
-        st.session_state.messages.append({"role": "assistant", "content": ai_response})
-
+        api_msgs = build_api_messages(st.session_state.messages)
+        ai_text  = call_api(api_msgs, has_image=pending is not None)
+        st.session_state.messages.append({"role": "assistant", "content": ai_text})
+        render_ai_bubble(ai_text)
     except Exception as e:
-        st.error(f"Error: {str(e)}")
+        st.error(f"Error: {e}")
 
     st.rerun()
