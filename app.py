@@ -9,7 +9,7 @@ load_dotenv()
 API_KEY = os.getenv("OPENROUTER_API_KEY") or st.secrets.get("OPENROUTER_API_KEY")
 
 st.set_page_config(
-    page_title="Aether AI",
+    page_title="Faaahhhh AI",
     page_icon="✨",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -74,7 +74,6 @@ st.markdown("""
 
 .chat-img { max-width: 280px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); margin-top: 6px; display: block; }
 
-/* Chat input area with paperclip */
 .chat-input-container {
     position: fixed; bottom: 0; left: 0; right: 0;
     background: linear-gradient(to top, #07080D 80%, transparent);
@@ -152,7 +151,6 @@ st.markdown("""
     border-color: rgba(99,102,241,0.3);
 }
 
-/* Image preview pill */
 .img-preview-container {
     max-width: 720px; margin: 0 auto 0.5rem;
     display: flex; align-items: center; gap: 8px;
@@ -169,7 +167,6 @@ st.markdown("""
 }
 .img-remove-btn:hover { color: #E53E3E; }
 
-/* Hide default streamlit chat input */
 [data-testid="stChatInput"] { display: none !important; }
 
 div[data-testid="stButton"] > button {
@@ -179,17 +176,16 @@ div[data-testid="stButton"] > button {
 }
 div[data-testid="stButton"] > button:hover { border-color: rgba(255,255,255,0.09) !important; color: #A0AEC0 !important; }
 
-/* File uploader hidden */
 [data-testid="stFileUploader"] { display: none !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Guard ─────────────────────────────────────────────────────────────────────
+# Guard
 if not API_KEY:
     st.error("🔑 OpenRouter API key not found.")
     st.stop()
 
-# ── Models ────────────────────────────────────────────────────────────────────
+# Models
 MODELS = {
     "text":      "openrouter/owl-alpha",
     "reasoning": "openrouter/owl-alpha",
@@ -213,7 +209,7 @@ VISION_SYSTEM_PROMPT = (
     "Describe images accurately and concisely. Be precise about details you observe."
 )
 
-# ── Session state ─────────────────────────────────────────────────────────────
+# Session state
 if "messages"      not in st.session_state: st.session_state.messages      = [{"role": "system", "content": SYSTEM_PROMPT}]
 if "mode"          not in st.session_state: st.session_state.mode          = "text"
 if "pending_image" not in st.session_state: st.session_state.pending_image = None
@@ -221,7 +217,7 @@ if "img_history"   not in st.session_state: st.session_state.img_history   = {}
 if "chat_input"    not in st.session_state: st.session_state.chat_input    = ""
 if "uploader_key"  not in st.session_state: st.session_state.uploader_key  = 0
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# Helpers
 def get_model(mode, has_image=False):
     return MODELS["vision"] if has_image else MODELS[mode]
 
@@ -276,7 +272,7 @@ def stream_response(messages, model_id):
     )
     col1, col2 = st.columns([0.04, 0.96])
     with col1:
-        st.markdown('<div class="avatar ai" style="margin-top:6px">✦</div>', unsafe_allow_html=True)
+        st.markdown('<div class="avatar ai" style="margin-top:6px"></div>', unsafe_allow_html=True)
     with col2:
         ph = st.empty()
         accumulated = ""
@@ -284,7 +280,7 @@ def stream_response(messages, model_id):
             for chunk in stream:
                 if chunk.choices and chunk.choices[0].delta.content:
                     accumulated += chunk.choices[0].delta.content
-                    ph.markdown(accumulated + "▋")
+                    ph.markdown(accumulated + "")
         ph.markdown(accumulated)
     return accumulated
 
@@ -312,7 +308,7 @@ def process_message():
 
     st.session_state["_trigger_send"] = True
 
-# ── Header ────────────────────────────────────────────────────────────────────
+# Header
 st.markdown("""
 <div class="aether-header">
     <div class="aether-brand">
@@ -323,7 +319,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ── Mode selector ─────────────────────────────────────────────────────────────
+# Mode selector
 modes = ["text", "reasoning", "coding"]
 mode_labels = {"text": "💬 Text", "reasoning": "🧠 Reasoning", "coding": "💻 Coding"}
 
@@ -336,7 +332,7 @@ for i, m in enumerate(modes):
 
 mode = st.session_state.mode
 
-# ── Chat history ──────────────────────────────────────────────────────────────
+# Chat history
 non_system = [m for m in st.session_state.messages if m["role"] != "system"]
 
 if non_system:
@@ -351,14 +347,13 @@ if non_system:
         render_message(msg["role"], msg["content"],
                        image_data=st.session_state.img_history.get(id(msg)))
 
-# ── Spacer for fixed bottom input ─────────────────────────────────────────────
+# Spacer for fixed bottom input
 st.markdown('<div style="height: 100px;"></div>', unsafe_allow_html=True)
 
-# ── Handle send trigger ───────────────────────────────────────────────────────
+# Handle send trigger
 if st.session_state.get("_trigger_send"):
     st.session_state["_trigger_send"] = False
 
-    # Render last user message
     last_user_msg = None
     for msg in reversed(st.session_state.messages):
         if msg["role"] == "user":
@@ -380,25 +375,24 @@ if st.session_state.get("_trigger_send"):
 
         st.rerun()
 
-# ── Image preview (above input) ───────────────────────────────────────────────
+# Image preview (above input)
 if st.session_state.pending_image:
     p = st.session_state.pending_image
     st.markdown(f"""
     <div class="img-preview-container">
         <div class="img-preview-pill">
-            <img src="data:{p["mime"]};base64,{p["data"]}">
-            <span>{p["name"]}</span>
+            <img src="data:{p['mime']};base64,{p['data']}">
+            <span>{p['name']}</span>
         </div>
         <button class="img-remove-btn" onclick="window.parent.postMessage({{type: 'streamlit:removeImage'}}, '*')">✕</button>
     </div>
     """, unsafe_allow_html=True)
 
-    # Hidden button for remove functionality
     if st.button("Remove Image", key="remove_img_hidden", help="Remove attached image"):
         st.session_state.pending_image = None
         st.rerun()
 
-# ── Custom chat input with paperclip ──────────────────────────────────────────
+# Custom chat input with paperclip
 has_image = st.session_state.pending_image is not None
 
 # Hidden file uploader
@@ -418,22 +412,19 @@ if uploaded is not None:
 # Custom input area
 st.markdown('<div class="chat-input-container">', unsafe_allow_html=True)
 
-# Paperclip button (triggers file uploader)
 paperclip_class = "paperclip-btn has-image" if has_image else "paperclip-btn"
 paperclip_emoji = "📎" if not has_image else "✅"
 
 col_clip, col_input, col_send = st.columns([0.06, 0.84, 0.08])
 
 with col_clip:
-    # Use a button that triggers the hidden file uploader via JavaScript
     if st.button(paperclip_emoji, key="paperclip", help="Attach image"):
-        # Trigger click on hidden file uploader
-        st.markdown(f"""
+        st.markdown("""
         <script>
-            setTimeout(() => {{
+            setTimeout(() => {
                 const uploader = document.querySelector('[data-testid="stFileUploader"] input[type="file"]');
                 if (uploader) uploader.click();
-            }}, 100);
+            }, 100);
         </script>
         """, unsafe_allow_html=True)
 
@@ -448,7 +439,7 @@ with col_input:
     )
 
 with col_send:
-    send_pressed = st.button("➤", key="send_btn", help="Send message")
+    send_pressed = st.button("", key="send_btn", help="Send message")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
